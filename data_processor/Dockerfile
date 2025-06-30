@@ -17,6 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código fuente
 COPY main.py .
+COPY data_cleaner.py .
 
 # Crear directorio para logs
 RUN mkdir -p /app/logs
@@ -28,6 +29,9 @@ USER processor
 # Variables de entorno por defecto
 ENV PROCESSING_INTERVAL=600
 ENV BATCH_SIZE=1000
+ENV PROCESSING_MODE=scheduled
+ENV RUN_ONCE=false
+ENV CLEANING_INTERVAL_MINUTES=2
 
 # Comando por defecto
 CMD ["python", "main.py"]
