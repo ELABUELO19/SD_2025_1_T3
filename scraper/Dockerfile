@@ -7,6 +7,11 @@ RUN apt-get update && apt-get install -y \
     gnupg \
     unzip \
     curl \
+    libxml2-dev \
+    libxslt-dev \
+    libz-dev \
+    gcc \
+    g++ \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar Chrome y ChromeDriver
@@ -30,7 +35,11 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Instalar dependencias Python
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    apt-get update && apt-get remove -y gcc g++ && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copiar código fuente
 COPY main.py .
