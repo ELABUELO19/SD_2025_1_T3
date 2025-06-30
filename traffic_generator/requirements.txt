@@ -3,5 +3,3 @@ pymongo==4.6.0
 numpy==1.25.0
 scipy==1.11.0
 requests==2.31.0
-asyncio
-logging

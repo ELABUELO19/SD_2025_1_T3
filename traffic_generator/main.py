@@ -44,17 +44,27 @@ class TrafficGenerator:
         logger.info("Generador de tráfico inicializado")
     
     def _define_query_patterns(self) -> List[Dict]:
-        """Define patrones de consulta realistas"""
+        """Define patrones de consulta basados en datos reales"""
         
         # Obtener municipios reales de la base de datos
         try:
             municipalities = list(self.collection.distinct('municipality'))
             if not municipalities:
-                municipalities = ['Santiago', 'Las Condes', 'Providencia', 'Ñuñoa', 'Maipú']
-        except:
-            municipalities = ['Santiago', 'Las Condes', 'Providencia', 'Ñuñoa', 'Maipú']
+                logger.warning("No se encontraron municipios en la base de datos. Esperando datos reales...")
+                return []
+        except Exception as e:
+            logger.error(f"Error obteniendo municipios reales: {e}")
+            return []
         
-        event_types = ['alert', 'jam', 'accident', 'road_closure', 'hazard']
+        # Obtener tipos de eventos reales de la base de datos
+        try:
+            event_types = list(self.collection.distinct('event_type'))
+            if not event_types:
+                logger.warning("No se encontraron tipos de eventos en la base de datos. Esperando datos reales...")
+                return []
+        except Exception as e:
+            logger.error(f"Error obteniendo tipos de eventos reales: {e}")
+            return []
         
         patterns = [
             # Consultas por municipio (muy comunes)
@@ -90,14 +100,14 @@ class TrafficGenerator:
                 }
             },
             
-            # Consultas geoespaciales
+            # Consultas geoespaciales basadas en ubicaciones reales
             {
                 'type': 'location_query',
                 'weight': 0.15,
                 'template': {
                     'location': {
-                        'lat': -33.4489,  # Santiago centro
-                        'lng': -70.6693,
+                        'lat': None,  # Se obtendrá de datos reales
+                        'lng': None,  # Se obtendrá de datos reales
                         'radius': 5  # 5 km
                     },
                     'limit': 150
@@ -119,10 +129,21 @@ class TrafficGenerator:
         self.municipalities = municipalities
         self.event_types = event_types
         
+        logger.info(f"Patrones de consulta inicializados con datos reales:")
+        logger.info(f"- Municipios: {len(municipalities)} encontrados")
+        logger.info(f"- Tipos de eventos: {len(event_types)} encontrados")
+        
         return patterns
     
     def generate_query(self) -> Dict:
-        """Genera una consulta basada en los patrones definidos"""
+        """Genera una consulta basada en datos reales únicamente"""
+        
+        # Verificar que hay patrones disponibles (basados en datos reales)
+        if not self.query_patterns:
+            logger.warning("No hay patrones de consulta disponibles. Esperando datos reales...")
+            self.query_patterns = self._define_query_patterns()
+            if not self.query_patterns:
+                return None
         
         # Seleccionar patrón basado en pesos
         weights = [pattern['weight'] for pattern in self.query_patterns]
@@ -132,10 +153,16 @@ class TrafficGenerator:
         query = pattern['template'].copy()
         
         if pattern['type'] == 'municipality_query':
-            query['municipality'] = random.choice(self.municipalities)
+            if self.municipalities:
+                query['municipality'] = random.choice(self.municipalities)
+            else:
+                return None
             
         elif pattern['type'] == 'event_type_query':
-            query['event_type'] = random.choice(self.event_types)
+            if self.event_types:
+                query['event_type'] = random.choice(self.event_types)
+            else:
+                return None
             
         elif pattern['type'] == 'recent_events':
             # Generar rango de tiempo reciente
@@ -149,19 +176,29 @@ class TrafficGenerator:
             }
             
         elif pattern['type'] == 'location_query':
-            # Variar la ubicación y radio
-            lat_offset = random.uniform(-0.1, 0.1)
-            lng_offset = random.uniform(-0.1, 0.1)
-            
-            query['location'] = {
-                'lat': -33.4489 + lat_offset,
-                'lng': -70.6693 + lng_offset,
-                'radius': random.choice([1, 2, 5, 10, 15])
-            }
+            # Obtener ubicación real de la base de datos
+            real_locations = self.get_real_locations(limit=10)
+            if real_locations:
+                selected_location = random.choice(real_locations)
+                # Agregar pequeña variación para simular búsquedas cercanas
+                lat_offset = random.uniform(-0.01, 0.01)  # ~1km de variación
+                lng_offset = random.uniform(-0.01, 0.01)
+                
+                query['location'] = {
+                    'lat': selected_location['location']['lat'] + lat_offset,
+                    'lng': selected_location['location']['lng'] + lng_offset,
+                    'radius': random.choice([1, 2, 5, 10, 15])
+                }
+            else:
+                logger.warning("No se encontraron ubicaciones reales, saltando consulta geoespacial")
+                return None
             
         elif pattern['type'] == 'combined_query':
-            query['municipality'] = random.choice(self.municipalities)
-            query['event_type'] = random.choice(self.event_types)
+            if self.municipalities and self.event_types:
+                query['municipality'] = random.choice(self.municipalities)
+                query['event_type'] = random.choice(self.event_types)
+            else:
+                return None
         
         return query
     
@@ -291,9 +328,14 @@ class TrafficGenerator:
         return arrival_times
     
     async def run_poisson_traffic(self, duration_minutes: int = 10):
-        """Ejecuta tráfico siguiendo distribución de Poisson"""
+        """Ejecuta tráfico siguiendo distribución de Poisson usando solo datos reales"""
         
-        logger.info(f"Iniciando tráfico Poisson (λ={self.poisson_lambda}) por {duration_minutes} minutos")
+        logger.info(f"Iniciando tráfico Poisson (λ={self.poisson_lambda}) por {duration_minutes} minutos con datos reales")
+        
+        # Verificar disponibilidad de datos reales
+        if not self.verify_data_availability():
+            logger.error("No hay suficientes datos reales disponibles para generar tráfico")
+            return {'error': 'Datos reales insuficientes'}
         
         duration_seconds = duration_minutes * 60
         arrival_times = self.poisson_arrival_times(duration_seconds)
@@ -315,26 +357,32 @@ class TrafficGenerator:
                 # Decidir tipo de consulta (80% normales, 20% agregaciones)
                 if random.random() < 0.8:
                     query = self.generate_query()
-                    result = await self.send_query(session, query)
+                    if query:  # Solo si se pudo generar una consulta válida
+                        result = await self.send_query(session, query)
+                        results.append(result)
                 else:
                     agg_type, params = self.generate_aggregation_query()
                     result = await self.send_aggregation_query(session, agg_type, params)
-                
-                results.append(result)
+                    results.append(result)
                 
                 # Log progreso cada 50 consultas
-                if len(results) % 50 == 0:
+                if len(results) % 50 == 0 and results:
                     cache_hits = sum(1 for r in results if r.get('cache_hit', False))
                     hit_rate = cache_hits / len(results) if results else 0
                     avg_response_time = np.mean([r['response_time'] for r in results])
                     logger.info(f"Progreso: {len(results)} consultas, Hit rate: {hit_rate:.2%}, Tiempo promedio: {avg_response_time:.3f}s")
         
-        return self.analyze_results(results, "Poisson")
+        return self.analyze_results(results, "Poisson (Datos Reales)")
     
     async def run_exponential_traffic(self, duration_minutes: int = 10):
-        """Ejecuta tráfico siguiendo distribución exponencial"""
+        """Ejecuta tráfico siguiendo distribución exponencial usando solo datos reales"""
         
-        logger.info(f"Iniciando tráfico Exponencial (λ={self.exponential_lambda}) por {duration_minutes} minutos")
+        logger.info(f"Iniciando tráfico Exponencial (λ={self.exponential_lambda}) por {duration_minutes} minutos con datos reales")
+        
+        # Verificar disponibilidad de datos reales
+        if not self.verify_data_availability():
+            logger.error("No hay suficientes datos reales disponibles para generar tráfico")
+            return {'error': 'Datos reales insuficientes'}
         
         duration_seconds = duration_minutes * 60
         arrival_times = self.exponential_arrival_times(duration_seconds)
@@ -356,21 +404,22 @@ class TrafficGenerator:
                 # Decidir tipo de consulta
                 if random.random() < 0.8:
                     query = self.generate_query()
-                    result = await self.send_query(session, query)
+                    if query:  # Solo si se pudo generar una consulta válida
+                        result = await self.send_query(session, query)
+                        results.append(result)
                 else:
                     agg_type, params = self.generate_aggregation_query()
                     result = await self.send_aggregation_query(session, agg_type, params)
-                
-                results.append(result)
+                    results.append(result)
                 
                 # Log progreso
-                if len(results) % 50 == 0:
+                if len(results) % 50 == 0 and results:
                     cache_hits = sum(1 for r in results if r.get('cache_hit', False))
                     hit_rate = cache_hits / len(results) if results else 0
                     avg_response_time = np.mean([r['response_time'] for r in results])
                     logger.info(f"Progreso: {len(results)} consultas, Hit rate: {hit_rate:.2%}, Tiempo promedio: {avg_response_time:.3f}s")
         
-        return self.analyze_results(results, "Exponencial")
+        return self.analyze_results(results, "Exponencial (Datos Reales)")
     
     async def run_burst_traffic(self, num_bursts: int = 5, burst_size: int = 20, burst_interval: int = 30):
         """Ejecuta tráfico en ráfagas para probar el comportamiento del caché"""
@@ -587,6 +636,91 @@ class TrafficGenerator:
                               f"Distribución actual: {'Poisson' if use_poisson else 'Exponencial'}")
         
         return self.analyze_results(results, "Continuo")
+    
+    def get_real_locations(self, limit: int = 100) -> List[Dict]:
+        """Obtiene ubicaciones reales de eventos desde la base de datos"""
+        try:
+            # Obtener eventos con ubicaciones válidas
+            pipeline = [
+                {
+                    '$match': {
+                        'location.lat': {'$exists': True, '$ne': None},
+                        'location.lng': {'$exists': True, '$ne': None}
+                    }
+                },
+                {
+                    '$sample': {'size': limit}
+                },
+                {
+                    '$project': {
+                        'location.lat': 1,
+                        'location.lng': 1
+                    }
+                }
+            ]
+            
+            locations = list(self.collection.aggregate(pipeline))
+            logger.info(f"Obtenidas {len(locations)} ubicaciones reales de la base de datos")
+            return locations
+            
+        except Exception as e:
+            logger.error(f"Error obteniendo ubicaciones reales: {e}")
+            return []
+    
+    def wait_for_real_data(self, min_events: int = 10, max_wait_minutes: int = 10):
+        """Espera hasta que haya suficientes datos reales en la base de datos"""
+        logger.info(f"Esperando al menos {min_events} eventos reales en la base de datos...")
+        
+        start_time = time.time()
+        max_wait_seconds = max_wait_minutes * 60
+        
+        while time.time() - start_time < max_wait_seconds:
+            try:
+                event_count = self.collection.count_documents({})
+                if event_count >= min_events:
+                    logger.info(f"Encontrados {event_count} eventos reales. Procediendo...")
+                    return True
+                    
+                logger.info(f"Solo {event_count} eventos encontrados. Esperando más datos...")
+                time.sleep(30)  # Esperar 30 segundos antes de verificar nuevamente
+                
+            except Exception as e:
+                logger.error(f"Error verificando datos: {e}")
+                time.sleep(30)
+        
+        logger.warning(f"Tiempo de espera agotado. Solo se encontraron datos limitados.")
+        return False
+    
+    def verify_data_availability(self) -> bool:
+        """Verifica que haya suficientes datos reales disponibles"""
+        try:
+            total_events = self.collection.count_documents({})
+            # Actualizar para el nuevo campo source
+            real_events = self.collection.count_documents({'source': {'$in': ['waze_api_real', 'waze_web']}})
+            municipalities = list(self.collection.distinct('municipality'))
+            event_types = list(self.collection.distinct('event_type'))
+            
+            logger.info(f"Verificación de datos:")
+            logger.info(f"- Total de eventos: {total_events}")
+            logger.info(f"- Eventos reales: {real_events}")
+            logger.info(f"- Municipios únicos: {len(municipalities)}")
+            logger.info(f"- Tipos de eventos únicos: {len(event_types)}")
+            
+            if real_events < 10:
+                logger.warning("Pocos eventos reales disponibles para generar tráfico significativo")
+                return False
+                
+            if len(municipalities) < 2:
+                logger.warning("Pocos municipios disponibles para consultas diversas")
+                
+            if len(event_types) < 2:
+                logger.warning("Pocos tipos de eventos disponibles para consultas diversas")
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error verificando disponibilidad de datos: {e}")
+            return False
 
 async def main():
     """Función principal del generador de tráfico"""
@@ -599,6 +733,14 @@ async def main():
     
     # Crear generador
     generator = TrafficGenerator(mongodb_uri, cache_uri, poisson_lambda, exponential_lambda)
+    
+    # Esperar a que haya datos reales disponibles
+    logger.info("Esperando datos reales en la base de datos...")
+    min_events = int(os.getenv('MIN_REAL_EVENTS', '50'))
+    max_wait_minutes = int(os.getenv('MAX_WAIT_MINUTES', '15'))
+    
+    if not generator.wait_for_real_data(min_events, max_wait_minutes):
+        logger.error("No se encontraron suficientes datos reales. El generador puede no funcionar correctamente.")
     
     # Esperar a que el sistema de caché esté disponible
     logger.info("Esperando que el sistema de caché esté disponible...")
@@ -618,8 +760,15 @@ async def main():
         logger.error("Sistema de caché no disponible después de 5 minutos")
         return
     
-    # Ejecutar modo de operación
+    # Ejecutar modo de operación basado solo en datos reales
     mode = os.getenv('TRAFFIC_MODE', 'comparative')
+    
+    logger.info(f"=== INICIANDO GENERADOR DE TRÁFICO CON DATOS REALES ÚNICAMENTE ===")
+    logger.info(f"Modo seleccionado: {mode}")
+    
+    # Verificar datos una vez más antes de proceder
+    if not generator.verify_data_availability():
+        logger.warning("Datos reales limitados. Los resultados pueden no ser representativos.")
     
     if mode == 'comparative':
         # Pruebas comparativas

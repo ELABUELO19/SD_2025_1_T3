@@ -1,0 +1,91 @@
+2025-06-30 20:50:15,185 - __main__ - INFO - Conexión exitosa a MongoDB
+2025-06-30 20:50:15,223 - __main__ - INFO - Iniciando scraper de Waze
+2025-06-30 20:50:16,312 - selenium.webdriver.common.selenium_manager - WARNING - The chromedriver version (114.0.5735.90) detected in PATH at /usr/local/bin/chromedriver might not be compatible with the detected chrome version (138.0.7204.49); currently, chromedriver 138.0.7204.49 is recommended for chrome 138.*, so it is advised to delete the driver in PATH and retry
+2025-06-30 20:50:18,913 - __main__ - ERROR - Error en web scraping: Message: session not created: This version of ChromeDriver only supports Chrome version 114
+Current browser version is 138.0.7204.49 with binary path /usr/bin/google-chrome
+Stacktrace:
+#0 0x561cd016f4e3 <unknown>
+#1 0x561ccfe9ec76 <unknown>
+#2 0x561ccfecc04a <unknown>
+#3 0x561ccfec74a1 <unknown>
+#4 0x561ccfec4029 <unknown>
+#5 0x561ccff02ccc <unknown>
+#6 0x561ccff0247f <unknown>
+#7 0x561ccfef9de3 <unknown>
+#8 0x561ccfecf2dd <unknown>
+#9 0x561ccfed034e <unknown>
+#10 0x561cd012f3e4 <unknown>
+#11 0x561cd01333d7 <unknown>
+#12 0x561cd013db20 <unknown>
+#13 0x561cd0134023 <unknown>
+#14 0x561cd01021aa <unknown>
+#15 0x561cd01586b8 <unknown>
+#16 0x561cd0158847 <unknown>
+#17 0x561cd0168243 <unknown>
+#18 0x7fabe5d771f5 <unknown>
+
+2025-06-30 20:50:18,918 - __main__ - INFO - Agregados eventos sintéticos para pruebas
+2025-06-30 20:50:18,928 - __main__ - INFO - Guardados 100 eventos únicos
+2025-06-30 20:50:18,937 - __main__ - INFO - Total de eventos en base de datos: 100
+2025-06-30 20:50:18,937 - __main__ - INFO - Esperando 300 segundos para próximo scraping
+2025-06-30 21:10:21,722 - __main__ - INFO - === INICIANDO SCRAPER DE WAZE - SOLO DATOS REALES ===
+2025-06-30 21:10:21,724 - __main__ - INFO - URI MongoDB: mongodb://admin:password123@mongodb:27017/traffic_db?authSource=admin
+2025-06-30 21:10:21,729 - __main__ - INFO - Intervalo de scraping: 300 segundos
+2025-06-30 21:10:21,731 - __main__ - INFO - NOTA: Este scraper NO genera datos sintéticos, solo obtiene datos reales de Waze
+2025-06-30 21:10:24,320 - __main__ - INFO - Conexión exitosa a MongoDB
+2025-06-30 21:10:24,334 - __main__ - INFO - Estadísticas iniciales de la base de datos:
+2025-06-30 21:10:24,334 - __main__ - INFO - - Total de eventos: 0
+2025-06-30 21:10:24,334 - __main__ - INFO - - Eventos reales: 0
+2025-06-30 21:10:24,336 - __main__ - INFO - Iniciando scraper de Waze - Solo datos reales
+2025-06-30 21:10:24,337 - __main__ - INFO - Obteniendo datos desde API de Waze...
+2025-06-30 21:10:24,680 - __main__ - WARNING - API Waze respondió con código 500
+2025-06-30 21:10:24,681 - __main__ - WARNING - No se obtuvieron eventos reales desde la API de Waze
+2025-06-30 21:10:24,682 - __main__ - INFO - Pocos eventos desde API, intentando web scraping...
+2025-06-30 21:10:25,665 - selenium.webdriver.common.selenium_manager - WARNING - The chromedriver version (114.0.5735.90) detected in PATH at /usr/local/bin/chromedriver might not be compatible with the detected chrome version (138.0.7204.49); currently, chromedriver 138.0.7204.92 is recommended for chrome 138.*, so it is advised to delete the driver in PATH and retry
+2025-06-30 21:10:26,935 - __main__ - ERROR - Error en web scraping de datos reales: Message: session not created: This version of ChromeDriver only supports Chrome version 114
+Current browser version is 138.0.7204.49 with binary path /usr/bin/google-chrome
+Stacktrace:
+#0 0x55ca1b3024e3 <unknown>
+#1 0x55ca1b031c76 <unknown>
+#2 0x55ca1b05f04a <unknown>
+#3 0x55ca1b05a4a1 <unknown>
+#4 0x55ca1b057029 <unknown>
+#5 0x55ca1b095ccc <unknown>
+#6 0x55ca1b09547f <unknown>
+#7 0x55ca1b08cde3 <unknown>
+#8 0x55ca1b0622dd <unknown>
+#9 0x55ca1b06334e <unknown>
+#10 0x55ca1b2c23e4 <unknown>
+#11 0x55ca1b2c63d7 <unknown>
+#12 0x55ca1b2d0b20 <unknown>
+#13 0x55ca1b2c7023 <unknown>
+#14 0x55ca1b2951aa <unknown>
+#15 0x55ca1b2eb6b8 <unknown>
+#16 0x55ca1b2eb847 <unknown>
+#17 0x55ca1b2fb243 <unknown>
+#18 0x7f1f2b0821f5 <unknown>
+
+2025-06-30 21:10:26,936 - __main__ - WARNING - No se obtuvieron eventos reales desde web scraping
+2025-06-30 21:10:26,936 - __main__ - WARNING - No se pudieron obtener eventos reales en esta iteración
+2025-06-30 21:10:26,942 - __main__ - INFO - Total de eventos en base de datos: 0 (Reales: 0)
+2025-06-30 21:10:26,943 - __main__ - INFO - Esperando 300 segundos para próximo scraping
+2025-06-30 21:27:24,140 - __main__ - INFO - === INICIANDO SCRAPER DE WAZE - SOLO DATOS REALES ===
+2025-06-30 21:27:24,142 - __main__ - INFO - URI MongoDB: mongodb://admin:password123@mongodb:27017/traffic_db?authSource=admin
+2025-06-30 21:27:24,144 - __main__ - INFO - Intervalo de scraping: 300 segundos
+2025-06-30 21:27:24,144 - __main__ - INFO - NOTA: Este scraper NO genera datos sintéticos, solo obtiene datos reales de Waze
+2025-06-30 21:27:27,831 - __main__ - INFO - Conexión exitosa a MongoDB
+2025-06-30 21:27:27,848 - __main__ - INFO - Estadísticas iniciales de la base de datos:
+2025-06-30 21:27:27,852 - __main__ - INFO - - Total de eventos: 0
+2025-06-30 21:27:27,855 - __main__ - INFO - - Eventos reales: 0
+2025-06-30 21:27:27,856 - __main__ - INFO - Iniciando scraper de Waze - Solo datos reales
+2025-06-30 21:27:27,857 - __main__ - INFO - Obteniendo datos desde API de Waze...
+2025-06-30 21:27:29,089 - __main__ - INFO - Zona Centro: 119 eventos obtenidos
+2025-06-30 21:27:31,201 - __main__ - INFO - Zona Oriente: 342 eventos obtenidos
+2025-06-30 21:27:33,602 - __main__ - INFO - Zona Poniente: 314 eventos obtenidos
+2025-06-30 21:27:35,536 - __main__ - INFO - Zona Sur: 123 eventos obtenidos
+2025-06-30 21:27:38,257 - __main__ - INFO - Zona Norte: 305 eventos obtenidos
+2025-06-30 21:27:39,260 - __main__ - INFO - API Waze: Obtenidos 1203 eventos reales desde 5 zonas
+2025-06-30 21:27:39,322 - __main__ - INFO - Guardados 1087 eventos únicos
+2025-06-30 21:27:39,323 - __main__ - INFO - Obtenidos y guardados 1203 eventos reales
+2025-06-30 21:27:39,329 - __main__ - INFO - Total de eventos en base de datos: 1087 (Reales: 1087)
+2025-06-30 21:27:39,330 - __main__ - INFO - Esperando 300 segundos para próximo scraping
