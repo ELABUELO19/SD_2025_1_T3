@@ -17,7 +17,7 @@ RUN ln -s /usr/bin/python3 /usr/bin/python
 WORKDIR /app
 
 # Instalar Hadoop
-ENV HADOOP_VERSION=3.3.4
+ENV HADOOP_VERSION=3.4.1
 ENV HADOOP_HOME=/opt/hadoop
 ENV HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop
 ENV PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin

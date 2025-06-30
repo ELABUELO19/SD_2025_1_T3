@@ -57,7 +57,7 @@ services:
 
   # Hadoop para procesamiento distribuido
   hadoop:
-    image: apache/hadoop:3.3.4
+    image: apache/hadoop:3.4.1
     container_name: traffic_hadoop
     environment:
       - HADOOP_CONF_DIR=/opt/hadoop/etc/hadoop
