@@ -641,9 +641,9 @@ def main():
     result = cleaner.run_full_cleaning_process()
     
     if result.get('success'):
-        print(f"✅ Proceso completado exitosamente")
-        print(f"📊 Eventos procesados: {result['cleaned_events']}")
-        print(f"📁 Archivo CSV: {result['csv_file']}")
+        print(f"Proceso completado exitosamente")
+        print(f"Eventos procesados: {result['cleaned_events']}")
+        print(f"Archivo CSV: {result['csv_file']}")
     else:
         print(f"❌ Error: {result.get('error')}")
 
